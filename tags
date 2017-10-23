@@ -1,0 +1,173 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BASE_YEAR	src/ts2datetime.h	34;"	d
+BUILD_CONF	config.mk	/^BUILD_CONF  = armlinux_release$/;"	m
+CFLAGS	config.mk	/^CFLAGS		= -O0 $/;"	m
+CFLAGS	config.mk	/^CFLAGS	 	= $/;"	m
+CFLAGS	config.mk	/^CFLAGS	 	= -O3 -D_NDEBUG -pthread$/;"	m
+CFLAGS	config.mk	/^CFLAGS	 	= -O3 -D_NDEBUG$/;"	m
+CFLAGS	config.mk	/^CFLAGS	 	= \/O2 -D_NDEBUG$/;"	m
+COL_AVGCOUNT	src/vcareport.h	59;"	d
+COL_AVGDURATION	src/vcareport.h	57;"	d
+COL_IN	src/vcareport.h	53;"	d
+COL_OUT	src/vcareport.h	54;"	d
+COL_RULE	src/vcareport.h	52;"	d
+COL_STARTTIME	src/vcareport.h	56;"	d
+COL_TIME	src/vcareport.h	55;"	d
+COL_TOTALCOUNT	src/vcareport.h	58;"	d
+COUNT_QUERY	src/vcareport.h	41;"	d
+COUNT_SQL_QUERY_FORMAT	src/vcareport.h	63;"	d
+COUNT_TABLE	src/vcareport.h	49;"	d
+CPPFLAGS	arm/Makefile	/^CPPFLAGS:=$/;"	m
+CUSTOMLIBS	config.mk	/^CUSTOMLIBS 	= common$/;"	m
+CUSTOMLIBS	config.mk	/^CUSTOMLIBS 	= osisolate$/;"	m
+DATETIME_FORMAT	src/ts2datetime.h	39;"	d
+DATETIME_FORMAT_TZ	src/ts2datetime.h	40;"	d
+DATETIME_MAX_LEN	src/ts2datetime.h	42;"	d
+DAYANORMALYR	src/ts2datetime.h	32;"	d
+DEFAULT_COUNTING_DB_PATH	src/vcareport.h	36;"	d
+DEFAULT_HEATMAP_DB_PATH	src/vcareport.h	38;"	d
+DEFAULT_QUERY_FILE_PATH_FORMAT	src/vcareport.h	39;"	d
+DEFAULT_SQLITE3_TEMP_DIR	src/vcareport.h	40;"	d
+DEFAULT_ZONE_DB_PATH	src/vcareport.h	37;"	d
+DEPENDENCY_LIB	arm/Makefile	/^DEPENDENCY_LIB := $(PREBUILD_LIBS) $/;"	m
+EReportFmt	src/vcareport.h	/^} EReportFmt;$/;"	t	typeref:enum:__anon1
+EVENTDB_SQL_QUERY_FORMAT	src/vcareport.h	65;"	d
+EVENT_COUNT_HEAD_CSV	src/vcareport.h	110;"	d
+EVENT_COUNT_HEAD_JSON_ETAG	src/vcareport.h	98;"	d
+EVENT_COUNT_HEAD_JSON_STAG	src/vcareport.h	97;"	d
+EVENT_COUNT_HEAD_XML_ETAG	src/vcareport.h	80;"	d
+EVENT_COUNT_HEAD_XML_STAG	src/vcareport.h	79;"	d
+EVENT_DATA_JSON_ETAG	src/vcareport.h	93;"	d
+EVENT_DATA_JSON_STAG	src/vcareport.h	92;"	d
+EVENT_ROOT_JSON_ETAG	src/vcareport.h	91;"	d
+EVENT_ROOT_JSON_STAG	src/vcareport.h	90;"	d
+EVENT_ROOT_XML_ETAG	src/vcareport.h	74;"	d
+EVENT_ROOT_XML_STAG	src/vcareport.h	73;"	d
+EVENT_SOURCE_CSV	src/vcareport.h	109;"	d
+EVENT_SOURCE_HEATMAP_JSON	src/vcareport.h	106;"	d
+EVENT_SOURCE_JSON	src/vcareport.h	94;"	d
+EVENT_SOURCE_XML	src/vcareport.h	76;"	d
+EVENT_ZONE_DATA_CSV	src/vcareport.h	113;"	d
+EVENT_ZONE_DATA_JSON	src/vcareport.h	104;"	d
+EVENT_ZONE_DATA_XML	src/vcareport.h	86;"	d
+EVENT_ZONE_HEAD_CSV	src/vcareport.h	112;"	d
+EVENT_ZONE_HEAD_JSON_ETAG	src/vcareport.h	103;"	d
+EVENT_ZONE_HEAD_JSON_STAG	src/vcareport.h	102;"	d
+EVENT_ZONE_HEAD_XML_ETAG	src/vcareport.h	85;"	d
+EVENT_ZONE_HEAD_XML_STAG	src/vcareport.h	84;"	d
+FOURHUNDREDCYCLEDAYS	src/ts2datetime.h	35;"	d
+FOURYEARCIRCLEDAYS	src/ts2datetime.h	33;"	d
+HEATMAP_QUERY	src/vcareport.h	43;"	d
+HEATMAP_SQL_FORMAT	src/vcareport.h	69;"	d
+HEATMAP_TABLE	src/vcareport.h	51;"	d
+HEATMAP_TMP_FILE	src/vcareport.h	44;"	d
+INCDIR	config.mk	/^INCDIR	 	= $(PROJ_ROOT)\/sqlite3\/sqlite3.${OSEXTENSION}\/inc$/;"	m
+INSTALLED_APP	makefile	/^INSTALLED_APP := $(host_package_bin_dir)\/$(MODNAME).$(EXESUFFIX)$/;"	m
+Int64	src/type.h	/^typedef long long int		   Int64;$/;"	t
+LEAPOCH	src/ts2datetime.h	37;"	d
+LIBS	config.mk	/^LIBS		= $(common_lib) $(sqlite3_lib)$/;"	m
+LIBS	config.mk	/^LIBS 		= common $/;"	m
+LIBS	config.mk	/^LIBS 		= common$/;"	m
+LINKFLAGS	config.mk	/^LINKFLAGS   = -ldl -lsqlite3$/;"	m
+LINK_TYPE	arm/Makefile	/^LINK_TYPE := shared$/;"	m
+MAX_BUFFER_SIZE	src/vcareport.h	28;"	d
+MAX_CMD_LENGTH	src/vcareport.h	32;"	d
+MAX_FILENAME_BUFLEN	src/vcareport.h	31;"	d
+MAX_FORMAT_BUFLEN	src/vcareport.h	30;"	d
+MAX_INFO_LENGTH	src/vcareport.h	33;"	d
+MAX_SCRIPT_LENGTH	src/vcareport.h	29;"	d
+MAX_SYSINFO_LENGTH	src/vcareport.h	34;"	d
+MODULE_NAME	arm/Makefile	/^MODULE_NAME := genreport$/;"	m
+NEW_APP	makefile	/^NEW_APP := $(host_package_bin_dir)\/$(MODNAME)$/;"	m
+ONEHUNDREDCYCLEDAYS	src/ts2datetime.h	36;"	d
+PLATFORM	config.mk	/^PLATFORM 	= _LINUX$/;"	m
+PLATFORM	config.mk	/^PLATFORM 	= _WIN32_$/;"	m
+PrintAndResetBufInfo	src/vcareport.c	/^void PrintAndResetBufInfo(char **ppcBuf, char **ppcTmp, int *piDataLen, int *piRemain)$/;"	f
+REPORT_CSV_FORMAT	src/vcareport.h	111;"	d
+REPORT_JSON_FORMAT	src/vcareport.h	99;"	d
+REPORT_XML_FORMAT	src/vcareport.h	81;"	d
+SECADAY	src/ts2datetime.h	31;"	d
+SECAMIN	src/ts2datetime.h	29;"	d
+SECANHR	src/ts2datetime.h	30;"	d
+SQL_PRAGMA_TEMP_DIR	src/vcareport.h	61;"	d
+SRCS	arm/Makefile	/^SRCS := $(wildcard $(SRC_PATH)\/*.c)$/;"	m
+SRC_PATH	arm/Makefile	/^SRC_PATH = ..\/src$/;"	m
+SYSDEFS	config.mk	/^SYSDEFS  	= $/;"	m
+TOOL_CONFIG	config.mk	/^TOOL_CONFIG = ARMLinux$/;"	m
+TOOL_CONFIG	config.mk	/^TOOL_CONFIG = VCWin32$/;"	m
+TReportConf	src/vcareport.h	/^} TReportConf;$/;"	t	typeref:struct:tReportConf
+TS2DATETIME_MODIFY_DATETIME	src/ts2datetime.h	26;"	d
+TS2DATETIME_MODULE_NAME	src/ts2datetime.h	24;"	d
+TS2DATETIME_VERSION	src/ts2datetime.h	25;"	d
+TS_2_DATETIME_VERSION	src/ts2datetime.h	27;"	d
+TTimeInfo	src/ts2datetime.h	/^} TTimeInfo;$/;"	t	typeref:struct:_ttimeinfo
+TYPE_NAME_COUNTING	src/vcareport.h	46;"	d
+TYPE_NAME_ZONE	src/vcareport.h	47;"	d
+UInt64	src/type.h	/^typedef unsigned long long int UInt64;$/;"	t
+USRDEFS	config.mk	/^USRDEFS  	=$/;"	m
+UpdateBufferInfo	src/vcareport.c	/^void UpdateBufferInfo(char **ppcTmp, int *piDataLen, int *piRemain, int iLen)$/;"	f
+VCAREPORT_MODIFY_DATETIME	src/vcareport.h	25;"	d
+VCAREPORT_MODULE_NAME	src/vcareport.h	23;"	d
+VCAREPORT_VERSION	src/vcareport.h	24;"	d
+VCAReport_GenISO8601Array	src/vcareport.c	/^void VCAReport_GenISO8601Array(TReportConf *ptConf, char ***ppcDateTime)$/;"	f
+VCAReport_GenISO8601DateTimeArr	src/ts2datetime.c	/^void VCAReport_GenISO8601DateTimeArr(const UInt64 iStart,const UInt64 iEnd, const Int64 iAggr, int iTZ, const int iDst, BOOL bLocal, char *** pppcBuf, unsigned int * piSize )$/;"	f
+VCAReport_GetCountingData	src/vcareport.c	/^SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)$/;"	f
+VCAReport_GetFromConfiger	src/vcareport.c	/^int VCAReport_GetFromConfiger(char* pszParam, char *pszOutBuffer)$/;"	f
+VCAReport_GetHeatmapData	src/vcareport.c	/^SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)$/;"	f
+VCAReport_GetISO8601Time	src/vcareport.c	/^void VCAReport_GetISO8601Time(UInt64 iTime, int iTzOffset, int iDst, BOOL bLocal, char *pcTime)$/;"	f
+VCAReport_GetSystemInfo	src/vcareport.c	/^SCODE VCAReport_GetSystemInfo(TReportConf *ptConf)$/;"	f
+VCAReport_GetUTCTime	src/vcareport.c	/^UInt64 VCAReport_GetUTCTime(UInt64 iTimestamp, int iTimeZone, int iDST)$/;"	f
+VCAReport_GetZoneData	src/vcareport.c	/^SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)$/;"	f
+VCAReport_ParseRequest	src/main.c	/^SCODE VCAReport_ParseRequest(int argc, char *argv[], TReportConf * ptConf)$/;"	f
+VCAReport_PrintReportEndTag	src/vcareport.c	/^void VCAReport_PrintReportEndTag(TReportConf *ptConf)$/;"	f
+VCAReport_PrintReportStartTag	src/vcareport.c	/^void VCAReport_PrintReportStartTag(TReportConf *ptConf)$/;"	f
+VCAReport_ReleaseDateTimeArr	src/ts2datetime.c	/^void VCAReport_ReleaseDateTimeArr(char **ppcBuf)$/;"	f
+VCA_REPORT_VERSION	src/vcareport.h	26;"	d
+ZONE_QUERY	src/vcareport.h	42;"	d
+ZONE_SQL_QUERY_FORMAT	src/vcareport.h	67;"	d
+ZONE_TABLE	src/vcareport.h	50;"	d
+__TS2DATETIME_H__	src/ts2datetime.h	19;"	d
+__TYPE_H__	src/type.h	2;"	d
+__VCAREPORT_H__	src/vcareport.h	18;"	d
+_ttimeinfo	src/ts2datetime.h	/^typedef struct _ttimeinfo$/;"	s
+acCountDBPath	src/vcareport.h	/^	char	acCountDBPath[128];$/;"	m	struct:tReportConf
+acHeatmapDBPath	src/vcareport.h	/^	char	acHeatmapDBPath[128];$/;"	m	struct:tReportConf
+acSample	src/vcareport.h	/^	char	acSample[128];$/;"	m	struct:tReportConf
+acSystemInfo	src/vcareport.h	/^	char    acSystemInfo[MAX_SYSINFO_LENGTH];$/;"	m	struct:tReportConf
+acVCAType	src/vcareport.h	/^	char	acVCAType[128];$/;"	m	struct:tReportConf
+acZoneDBPath	src/vcareport.h	/^	char	acZoneDBPath[128];$/;"	m	struct:tReportConf
+acc_day_mon	src/ts2datetime.h	/^static const short int acc_day_mon[13] = {0, 31, 61, 92, 122, 153, 184, 214, 245, 275, 306, 337, 366};$/;"	v
+bEventDB	src/vcareport.h	/^	int		bEventDB;$/;"	m	struct:tReportConf
+bHeatmap	src/vcareport.h	/^	BOOL    bHeatmap;$/;"	m	struct:tReportConf
+bLeapYr	src/ts2datetime.h	/^        int bLeapYr;$/;"	m	struct:_ttimeinfo
+bLite	src/vcareport.h	/^	int		bLite;$/;"	m	struct:tReportConf
+bLocal	src/vcareport.h	/^	int		bLocal;$/;"	m	struct:tReportConf
+eCSV	src/vcareport.h	/^	eCSV$/;"	e	enum:__anon1
+eFmt	src/vcareport.h	/^	EReportFmt eFmt;$/;"	m	struct:tReportConf
+eJSON	src/vcareport.h	/^	eJSON,$/;"	e	enum:__anon1
+eUnKnown	src/vcareport.h	/^	eUnKnown,$/;"	e	enum:__anon1
+eXML	src/vcareport.h	/^	eXML,$/;"	e	enum:__anon1
+getDateTime	src/ts2datetime.c	/^void getDateTime(TTimeInfo *ptCurrTime, int iTzOffset, char * pcBuf, unsigned int iSize)$/;"	f
+host_package_bin_dir	makefile	/^host_package_bin_dir=${ROOTFSDIR}${package_bin_dir}$/;"	m
+iAggregation	src/vcareport.h	/^	Int64	iAggregation;	\/\/ in unit of second$/;"	m	struct:tReportConf
+iDST	src/vcareport.h	/^	int		iDST;		 	\/\/ timezone offset in seconds$/;"	m	struct:tReportConf
+iDay	src/ts2datetime.h	/^        int iDay;$/;"	m	struct:_ttimeinfo
+iEndTime	src/vcareport.h	/^	UInt64  iEndTime;		\/\/ in unit of second$/;"	m	struct:tReportConf
+iHr	src/ts2datetime.h	/^        int iHr;$/;"	m	struct:_ttimeinfo
+iMin	src/ts2datetime.h	/^        int iMin;$/;"	m	struct:_ttimeinfo
+iMonth	src/ts2datetime.h	/^        int iMonth;$/;"	m	struct:_ttimeinfo
+iSec	src/ts2datetime.h	/^        int iSec;$/;"	m	struct:_ttimeinfo
+iStartTime	src/vcareport.h	/^	UInt64  iStartTime;		\/\/ in unit of second$/;"	m	struct:tReportConf
+iTzOffset	src/vcareport.h	/^	int		iTzOffset;		\/\/ timezone offset in seconds$/;"	m	struct:tReportConf
+iYear	src/ts2datetime.h	/^        int iYear;$/;"	m	struct:_ttimeinfo
+main	src/main.c	/^int main(int argc, char *argv[])$/;"	f
+package_bin_dir	makefile	/^package_bin_dir = \/usr\/bin$/;"	m
+parsetime	src/parsetime.c	/^void parsetime(char *szInput, unsigned int *puiresult)$/;"	f
+tReportConf	src/vcareport.h	/^typedef struct tReportConf {$/;"	s
+ts2datetime	src/ts2datetime.c	/^void ts2datetime(Int64 timestamp, int iTzOffset, int iDst, TTimeInfo * ptCurrTime)$/;"	f
+usage	src/main.c	/^void usage(void)$/;"	f

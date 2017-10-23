@@ -1,0 +1,8 @@
+echo build $1
+export cwd=$(pwd)
+cd ../../../build
+pwd
+source devel_"$1"
+echo cd ${cwd}
+cd ${cwd}
+./build_staticlib.sh

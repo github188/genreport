@@ -1,0 +1,3 @@
+[M] Fix heatmap report push bug #82396
+ *Avoid the conflict when multiple trigger_report trigger at the same time.
+  Modify temp file name from "HeatmapTmp" to "HeatmapTmp_%d (startime)"
