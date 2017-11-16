@@ -21,9 +21,9 @@
 #include "typedef.h"
 #include "type.h"
 #define VCAREPORT_MODULE_NAME		"vcareport"
-#define	VCAREPORT_VERSION			"1.1.1.0"
-#define VCAREPORT_MODIFY_DATETIME	"Last modified at 2016/05/24 12:00:00"
-#define VCA_REPORT_VERSION			MAKEFOURCC(1, 1, 1, 0)
+#define	VCAREPORT_VERSION			"1.1.2.0"
+#define VCAREPORT_MODIFY_DATETIME	"Last modified at 2017/11/15 12:00:00"
+#define VCA_REPORT_VERSION			MAKEFOURCC(1, 1, 2, 0)
 
 #define MAX_BUFFER_SIZE 			102400
 #define MAX_SCRIPT_LENGTH			1024
