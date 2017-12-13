@@ -21,9 +21,9 @@
 #include "typedef.h"
 #include "type.h"
 #define VCAREPORT_MODULE_NAME		"vcareport"
-#define	VCAREPORT_VERSION			"1.1.2.0"
-#define VCAREPORT_MODIFY_DATETIME	"Last modified at 2017/11/15 12:00:00"
-#define VCA_REPORT_VERSION			MAKEFOURCC(1, 1, 2, 0)
+#define	VCAREPORT_VERSION			"1.1.3.0"
+#define VCAREPORT_MODIFY_DATETIME	"Last modified at 2017/12/12 18:00:00"
+#define VCA_REPORT_VERSION			MAKEFOURCC(1, 1, 3, 0)
 
 #define MAX_BUFFER_SIZE 			102400
 #define MAX_SCRIPT_LENGTH			1024
@@ -38,7 +38,7 @@
 #define DEFAULT_HEATMAP_DB_PATH			"/mnt/flash2/vcadb/heatmap.db"
 #define DEFAULT_QUERY_FILE_PATH_FORMAT  "/mnt/flash2/reportpush/report_%ld.sql"
 #define DEFAULT_SQLITE3_TEMP_DIR    	"/mnt/flash2/reportpush/sqlite_tmp"
-#define COUNT_QUERY                     "/mnt/flash2/reportpush/count_report_%d.sql"
+#define COUNT_QUERY                     "/mnt/flash2/reportpush/Count_report_%d.sql"
 #define ZONE_QUERY                      "/mnt/flash2/reportpush/Zone_report_%d.sql"
 #define HEATMAP_QUERY                   "/mnt/flash2/reportpush/Heatmap_report_%d.sql"
 #define HEATMAP_TMP_FILE                "/mnt/flash2/reportpush/HeatmapTmp_%d"
@@ -121,7 +121,6 @@ typedef enum {
 
 typedef struct tReportConf {
 	EReportFmt eFmt;
-	char	acSample[128];
 	char	acCountDBPath[128];
 	char	acZoneDBPath[128];
 	char	acHeatmapDBPath[128];

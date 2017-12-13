@@ -14,8 +14,8 @@ void usage(void)
 	printf("\n");
     printf("genReport app version: %d.%d.%d.%d\n"
            "Usage:\n"
-           "        genReport -s start_time -e end_time -a aggreagation -f format -t vcatype [-i lite] [-l localtime] [-d eventdb] [-b backup] [-h]\n"
-           "Options:\n""  -s Start time of query (Time stamp or date time)\n  -e End time of query (Time stamp or date time)\n  -a Aggregation period for each data in second\n  -f Report format such as xml, csv, json\n  -t VCA type: counting/heatmap\n  -i Set 1 to ignore the zero data\n  -l Set 1 to specify input time is local time otherwise it is UTC time\n  -d Get counting report with event time\n  -b Dump query result in specific path\n  -h Show usage\n  Ex1: genReport -f csv -s 2017-04-25T00:00:00 -e 2017-04-27T00:00:00 -a 86400 -t counting -l 1\n  Ex2: genReport -f json -s 1498032900 -e 1498033800 -a 900 -t heatmap\n",
+           "        genReport -s start_time -e end_time -a aggreagation -f format -t vcatype [-i lite] [-l localtime] [-d eventdb] [-h]\n"
+           "Options:\n""  -s Start time of query (Time stamp or date time)\n  -e End time of query (Time stamp or date time)\n  -a Aggregation period (second)\n  -f Report format: xml, csv, json\n  -t VCA type: counting/heatmap\n  -i Set 1 to ignore the zero data\n  -l Set 1 to specify report time is local time\n  -d Get counting report with event time\n  -h Show usage\n  Ex1: genReport -f csv -s 2017-04-25T00:00:00 -e 2017-04-27T00:00:00 -a 86400 -t counting -l 1\n  Ex2: genReport -f json -s 1498032900 -e 1498033800 -a 900 -t heatmap\n",
            ((unsigned int)VCA_REPORT_VERSION      ) % 256,
            ((unsigned int)VCA_REPORT_VERSION >> 8 ) % 256,
            ((unsigned int)VCA_REPORT_VERSION >> 16) % 256,
@@ -30,7 +30,7 @@ SCODE VCAReport_ParseRequest(int argc, char *argv[], TReportConf * ptConf)
 	FILE *pCmd;
 	unsigned int uiResult;
 
-    while ((iCh = getopt(argc, argv, "f:s:e:a:i:l:d:b:t:h")) != -1)
+    while ((iCh = getopt(argc, argv, "f:s:e:a:i:l:d:t:h")) != -1)
     {
         switch (iCh) {
 		case 'f': // format
@@ -74,9 +74,6 @@ SCODE VCAReport_ParseRequest(int argc, char *argv[], TReportConf * ptConf)
 			break;
 		case 'd':
 			ptConf->bEventDB = (atoi(optarg)>0);
-			break;
-		case 'b':
-			strncpy(ptConf->acSample, optarg, sizeof(ptConf->acSample));
 			break;
 		case 't':
 			if (strcmp(optarg, "counting") && strcmp(optarg, "heatmap"))
@@ -135,6 +132,12 @@ int main(int argc, char *argv[])
 	if (VCAReport_GetSystemInfo(&tConf) != S_OK)
 	{
 		printf("Get system infomation error\n");
+		return S_FAIL;
+	}
+
+	if (VCAReport_MakeTempDir() != S_OK)
+	{
+		printf("Make sql temp dir failed\n");
 		return S_FAIL;
 	}
 

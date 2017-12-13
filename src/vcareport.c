@@ -164,12 +164,6 @@ SCODE VCAReport_GetSystemInfo(TReportConf *ptConf)
 	snprintf(szCurr, MAX_INFO_LENGTH, DATETIME_FORMAT, tTimeInfo.iYear, tTimeInfo.iMonth, tTimeInfo.iDay,
 			tTimeInfo.iHr, tTimeInfo.iMin, tTimeInfo.iSec);
 
-	if (ptConf->bLocal)   // Get UTC time of start/end time if input is local time.
-	{
-		ptConf->iStartTime = VCAReport_GetUTCTime(ptConf->iStartTime, ptConf->iTzOffset, ptConf->iDST);
-		ptConf->iEndTime = VCAReport_GetUTCTime(ptConf->iEndTime, ptConf->iTzOffset, ptConf->iDST);
-	}
-
 #ifdef _DEBUGSYSINFO_
 	printf("===================================================================================================\n");
 	printf("Mac: %s\nIP: %s\nDeviceID: %s\nGroupID: %s\nModule Name: %s\nTime Zone: %s\nDST: %s\nCurrent Time: %s\n",
@@ -253,6 +247,20 @@ void PrintAndResetBufInfo(char **ppcBuf, char **ppcTmp, int *piDataLen, int *piR
 	*piRemain = MAX_BUFFER_SIZE;
 }
 
+SCODE VCAReport_MakeTempDir()
+{
+	struct stat st = {0};
+	if (stat(DEFAULT_SQLITE3_TEMP_DIR, &st) == -1)
+	{
+		if ((mkdir(DEFAULT_SQLITE3_TEMP_DIR, 0777)) < 0)
+		{
+			printf("Make temp error: %s\n", strerror(errno));
+			return S_FAIL;
+		}
+	}
+	return S_OK;
+}
+
 SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 {
 	sqlite3 * db = NULL;
@@ -273,19 +281,6 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 		return S_FAIL;
 	}
 	char *pcTmp = pcBuf;
-	char *pcBackup = calloc(MAX_BUFFER_SIZE, sizeof(char));
-	if (pcBackup == NULL)
-	{
-		printf("Allocate backup buff failed\n");
-		return S_FAIL;
-	}
-	char *pcTmpBackup = pcBackup;
-
-	struct stat st = {0};
-	if (stat(DEFAULT_SQLITE3_TEMP_DIR, &st) == -1)
-	{
-		mkdir(DEFAULT_SQLITE3_TEMP_DIR, 0777);
-	}
 
 	if (ptConf->acCountDBPath[0] == '\0')
 	{
@@ -346,6 +341,7 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 	// ================================================
 	// Dump counting query
 
+#ifdef _DEBUG_
 	char acCountQuery[MAX_FILENAME_BUFLEN] = {0};
 	snprintf(acCountQuery, MAX_FILENAME_BUFLEN, COUNT_QUERY, (int)time(NULL));
 	if ((fp = fopen(acCountQuery, "w+")) == NULL)
@@ -355,105 +351,23 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 	}
 	fprintf(fp, "%s\n.separator \" \"\n%s", SQL_PRAGMA_TEMP_DIR, acScript);
 	fclose(fp);
-	if (access(acCountQuery, F_OK) != -1)  //File exist
-	{
-#ifndef _DEBUG_
-		if (remove(acCountQuery) < 0)
-		{
-			printf("Unable to delete the counting query file\n");
-			return S_FAIL;
-		}
 #endif
-	}
 	// ================================================
 
-	sqlite3_prepare_v2(db, acScript, iLen, &stmt, NULL);
+	rc = sqlite3_prepare_v2(db, acScript, iLen, &stmt, NULL);
+	if (rc != SQLITE_OK)
+	{
+		printf("ERROR: cannot binding %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
+		return S_FAIL;
+	}
 
 	char acEventDB[MAX_FORMAT_BUFLEN] = {0};
 	char acIn[10] = {0}, acOut[10] = {0}, acCountName[40] = {0}, acRuleName[40] = {0},
 		 acStart[DATETIME_MAX_LEN] = {0}, acEnd[DATETIME_MAX_LEN] = {0};
 	iLen = 0, iDataLen = 0;
 	int iRemain = MAX_BUFFER_SIZE;
-	char acCountSample[MAX_FILENAME_BUFLEN] = {0};
 
-	if (strlen(ptConf->acSample))
-	{
-		snprintf(acCountSample, MAX_FILENAME_BUFLEN, "%s.count", ptConf->acSample);
-	}
-
-	if (strlen(acCountSample) && access(acCountSample, F_OK) != -1)   // For report push. If there is a dump file, need not query DB.
-	{
-		if ((fp = fopen(acCountSample, "r")) == NULL)
-		{
-			printf("Open count sample file for reading error\n");
-			return S_FAIL;
-		}
-		while (fscanf(fp, "%s %d %d %llu", acCountName, &iIn, &iOut, &iStartTime) == 4)
-		{
-			if (ptConf->bLite == 0 || iIn != 0 || iOut != 0)
-			{
-				index = (iStartTime - ptConf->iStartTime)/ptConf->iAggregation;
-				if (ptConf->bEventDB)
-				{
-					VCAReport_GetISO8601Time(ptConf->iEndTime, ptConf->iTzOffset, ptConf->iDST, ptConf->bLocal, acEnd);
-					if (strlen(acRuleName))
-					{
-						if (!strcmp(acRuleName, acCountName))
-						{
-							VCAReport_GetISO8601Time(iStartTime, ptConf->iTzOffset, ptConf->iDST,
-														ptConf->bLocal, acEnd);
-						}
-						iLen = snprintf(pcTmp, iRemain, acDataFormat, acRuleName, atoi(acIn), atoi(acOut),
-										acStart, acEnd);
-					}
-				}
-				else
-				{
-					iLen = snprintf(pcTmp, iRemain, acDataFormat, acCountName, iIn, iOut, ppcDateTime[index],
-									ppcDateTime[index+1]);
-				}
-
-				if (iLen < iRemain)
-				{
-					UpdateBufferInfo(&pcTmp, &iDataLen, &iRemain, iLen);
-				}
-				else
-				{
-					PrintAndResetBufInfo(&pcBuf, &pcTmp, &iDataLen, &iRemain);
-
-					if (ptConf->bEventDB)
-					{
-						iLen = snprintf(pcTmp, iRemain, acDataFormat, acRuleName, atoi(acIn), atoi(acOut),
-										acStart, acEnd);
-					}
-					else
-					{
-						iLen = snprintf(pcTmp, iRemain, acDataFormat, acCountName, iIn, iOut, ppcDateTime[index],
-										ppcDateTime[index+1]);
-					}
-
-					UpdateBufferInfo(&pcTmp, &iDataLen, &iRemain, iLen);
-				}
-				if (ptConf->bEventDB)
-				{
-					snprintf(acRuleName, sizeof(acRuleName), "%s", acCountName);
-					snprintf(acIn, sizeof(acIn), "%d", iIn);
-					snprintf(acOut, sizeof(acOut), "%d", iOut);
-					VCAReport_GetISO8601Time(iStartTime, ptConf->iTzOffset, ptConf->iDST, ptConf->bLocal, acStart);
-				}
-			}  // End lite
-		}  //End reading file
-	}
-	else  // Query DB
-	{
-		if (strlen(ptConf->acSample))
-		{
-			if ((fp = fopen(acCountSample, "w+")) == NULL)
-			{
-				printf("Open count sample file for writing error\n");
-				return S_FAIL;
-			}
-		}
 		while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
 		{
 			iIn = sqlite3_column_int(stmt, 1);
@@ -481,12 +395,6 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 				{
 					iLen = snprintf(pcTmp, iRemain, acDataFormat, acCountName, iIn, iOut,
 									ppcDateTime[index] , ppcDateTime[index+1]);
-
-					if (strlen(ptConf->acSample))
-					{
-						pcTmpBackup += snprintf(pcTmpBackup, MAX_BUFFER_SIZE, "%s %d %d %llu\n", acCountName, iIn,
-												iOut, iStartTime);
-					}
 				}
 
 				if (iLen < iRemain) //Buffer length is enough
@@ -509,13 +417,6 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 					}
 
 					UpdateBufferInfo(&pcTmp, &iDataLen, &iRemain, iLen);
-
-					if (strlen(ptConf->acSample))
-					{
-						fprintf(fp, "%s", pcBackup);
-						memset(pcBackup, 0, MAX_BUFFER_SIZE);
-						pcTmpBackup = pcBackup;
-					}
 				}
 				if (ptConf->bEventDB)
 				{
@@ -523,11 +424,6 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 					snprintf(acIn, sizeof(acIn), "%d", iIn);
 					snprintf(acOut, sizeof(acOut), "%d", iOut);
 					VCAReport_GetISO8601Time(iStartTime, ptConf->iTzOffset, ptConf->iDST, ptConf->bLocal, acStart);
-					if (strlen(ptConf->acSample))
-					{
-						pcTmpBackup += snprintf(pcTmpBackup, MAX_BUFFER_SIZE, "%s %d %d %llu\n", acCountName, iIn,
-												iOut, iStartTime);
-					}
 				}
 			}
 		}
@@ -538,7 +434,7 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 		}
 		sqlite3_finalize(stmt);
 		sqlite3_close(db);
-	}
+
 	if (ptConf->bEventDB)
 	{
 		VCAReport_GetISO8601Time(ptConf->iEndTime, ptConf->iTzOffset, ptConf->iDST, ptConf->bLocal, acEnd);
@@ -560,18 +456,13 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 	}
 
 	printf("%s", pcBuf);
-	if (strlen(ptConf->acSample))
-	{
-		fprintf(fp, "%s", pcBackup);
-		fclose(fp);
-	}
+
 	if (ptConf->eFmt == eXML)
 		printf("%s", EVENT_COUNT_HEAD_XML_ETAG);
 	if (ptConf->eFmt == eJSON)
 		printf("%s", EVENT_COUNT_HEAD_JSON_ETAG);
 
 	free(pcBuf);
-	free(pcBackup);
 
 	return status;
 }
@@ -600,13 +491,6 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 		return S_FAIL;
 	}
 	char *pcTmp = pcBuf;
-	char *pcBackup = calloc(MAX_BUFFER_SIZE, sizeof(char));
-	if (pcBackup == NULL)
-	{
-		printf("Allocate backup buff failed\n");
-		return S_FAIL;
-	}
-	char *pcTmpBackup = pcBackup;
 
 	if (ptConf->acZoneDBPath[0] == '\0')
 	{
@@ -663,6 +547,7 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 		// ================================================
 		// Dump zone query
 
+#ifdef _DEBUG_
 		char acZoneQuery[MAX_FILENAME_BUFLEN] = {0};
 		snprintf(acZoneQuery, MAX_FILENAME_BUFLEN, ZONE_QUERY, (int)time(NULL));
 		if ((fp = fopen(acZoneQuery, "w+")) == NULL)
@@ -672,70 +557,20 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 		}
 		fprintf(fp, "%s\n.separator \" \"\n%s", SQL_PRAGMA_TEMP_DIR, acScript);
 		fclose(fp);
-		if (access(acZoneQuery, F_OK) != -1)
-		{
-#ifndef _DEBUG_
-			if (remove(acZoneQuery) < 0)
-			{
-				printf("Unable to delete the zone query file\n");
-				return S_FAIL;
-			}
 #endif
-		}
 		// ================================================
 
 		sqlite3_prepare_v2(db, acScript, iLen, &stmt, NULL);
+		if (rc != SQLITE_OK)
+		{
+			printf("ERROR: cannot binding %s\n", sqlite3_errmsg(db));
+			sqlite3_close(db);
+			return S_FAIL;
+		}
+
 		iLen = 0, iDataLen = 0;
 		int iRemain = MAX_BUFFER_SIZE;
 
-		char acZoneSample[MAX_FILENAME_BUFLEN] = {0};
-		if (strlen(ptConf->acSample))
-		{
-			snprintf(acZoneSample, MAX_FILENAME_BUFLEN, "%s.zone", ptConf->acSample);
-		}
-
-		if (strlen(acZoneSample) && access(acZoneSample, F_OK) != -1)
-		{
-			if ((fp = fopen(acZoneSample, "r")) == NULL)
-			{
-				printf("Open zone sample file for reading error\n");
-				return S_FAIL;
-			}
-			while (fscanf(fp, "%s %d %d %d %f %f %llu", acZoneName, &iInward, &iOutward, &iTotal, &dAvgDur,
-						  &dAvgCnt, &iStartTime) == 7)
-			{
-				if (ptConf->bLite == 0 || iInward != 0 || iOutward != 0)
-				{
-					index = (iStartTime - ptConf->iStartTime)/ptConf->iAggregation;
-					iLen = snprintf(pcTmp, iRemain, acZoneDataFormat, acZoneName, iInward, iOutward, iTotal, dAvgDur,
-									dAvgCnt, ppcDateTime[index] , ppcDateTime[index+1]);
-
-					if (iLen < iRemain)
-					{
-						UpdateBufferInfo(&pcTmp, &iDataLen, &iRemain, iLen);
-					}
-					else
-					{
-						PrintAndResetBufInfo(&pcBuf, &pcTmp, &iDataLen, &iRemain);
-
-						iLen = snprintf(pcTmp, iRemain, acZoneDataFormat, acZoneName, iInward, iOutward, iTotal,
-										dAvgDur, dAvgCnt, ppcDateTime[index] , ppcDateTime[index+1]);
-
-						UpdateBufferInfo(&pcTmp, &iDataLen, &iRemain, iLen);
-					}
-				} // End lite
-			}  //End reading file
-		}
-		else
-		{
-			if (strlen(ptConf->acSample))
-			{
-				if ((fp = fopen(acZoneSample, "w+")) == NULL)
-				{
-					printf("Open zone sample file for writing error\n");
-					return S_FAIL;
-				}
-			}
 			while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
 			{
 				strncpy(acZoneName, sqlite3_column_text(stmt,0), sizeof(acZoneName));
@@ -750,11 +585,6 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 					index = (iStartTime - ptConf->iStartTime)/ptConf->iAggregation;
 					iLen = snprintf(pcTmp, iRemain, acZoneDataFormat, acZoneName, iInward, iOutward, iTotal, dAvgDur,
 									dAvgCnt, ppcDateTime[index] , ppcDateTime[index+1]);
-					if (strlen(ptConf->acSample))
-					{
-						pcTmpBackup += snprintf(pcTmpBackup, MAX_BUFFER_SIZE, "%s %d %d %d %f %f %llu\n", acZoneName,
-												iInward, iOutward, iTotal, dAvgDur, dAvgCnt, iStartTime);
-					}
 
 					if (iLen < iRemain)
 					{
@@ -768,13 +598,6 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 										dAvgDur, dAvgCnt, ppcDateTime[index] , ppcDateTime[index+1]);
 
 						UpdateBufferInfo(&pcTmp, &iDataLen, &iRemain, iLen);
-
-						if (strlen(ptConf->acSample))
-						{
-							fprintf(fp, "%s", pcBackup);
-							memset(pcBackup, 0, MAX_BUFFER_SIZE);
-							pcTmpBackup = pcBackup;
-						}
 					}
 				}
 			}
@@ -786,21 +609,14 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 
 			sqlite3_finalize(stmt);
 			sqlite3_close(db);
-		}
+
 		if (ptConf->eFmt == eJSON)
 		{
 			pcBuf[--iDataLen] = '\0';
 		}
 		printf("%s", pcBuf);
 
-		if (strlen(ptConf->acSample))
-		{
-			fprintf(fp, "%s", pcBackup);
-			fclose(fp);
-		}
-
 		free(pcBuf);
-		free(pcBackup);
 	}
 
 	if (ptConf->eFmt == eXML)
@@ -862,6 +678,7 @@ SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)
 	// ================================================
 	// Dump heatmap query
 
+#ifdef _DEBUG_
 	char acHeatmapQuery[MAX_FILENAME_BUFLEN] = {0};
 	snprintf(acHeatmapQuery, MAX_FILENAME_BUFLEN, HEATMAP_QUERY, (int)time(NULL));
 	if ((fp = fopen(acHeatmapQuery, "w+")) == NULL)
@@ -871,50 +688,19 @@ SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)
 	}
 	fprintf(fp, "%s\n.separator \" \"\n%s", SQL_PRAGMA_TEMP_DIR, acScript);
 	fclose(fp);
-	if (access(acHeatmapQuery, F_OK) != -1)
-	{
-#ifndef _DEBUG_
-		if (remove(acHeatmapQuery) < 0)
-		{
-			printf("Unable to delete the heatmap query file\n");
-			return S_FAIL;
-		}
 #endif
-	}
 	// ================================================
 
 	sqlite3_prepare_v2(db, acScript, iLen, &stmt, NULL);
-	iLen = 0;
-	char acHeatmapSample[MAX_FILENAME_BUFLEN] = {0};
-	if (strlen(ptConf->acSample))
+	if (rc != SQLITE_OK)
 	{
-		snprintf(acHeatmapSample, MAX_FILENAME_BUFLEN, "%s.heatmap", ptConf->acSample);
+		printf("ERROR: cannot binding %s\n", sqlite3_errmsg(db));
+		sqlite3_close(db);
+		return S_FAIL;
 	}
 
-	if (strlen(acHeatmapSample) && access(acHeatmapSample, F_OK) != -1)
-	{
-		if ((fp = fopen(acHeatmapSample, "r")) == NULL)
-		{
-			printf("Open heatmap sample file for reading error\n");
-			return S_FAIL;
-		}
-		while ((iLen = fread(pcBuf, 1, MAX_BUFFER_SIZE-1, fp)) > 0)
-		{
-			printf("%s", pcBuf);
-			memset(pcBuf, 0, MAX_BUFFER_SIZE);
-		}
-		fclose(fp);
-	}
-	else
-	{
-		if (strlen(ptConf->acSample))
-		{
-			if ((fp = fopen(acHeatmapSample, "w+")) == NULL)
-			{
-				printf("Open heatmap sample file for writing error\n");
-				return S_FAIL;
-			}
-		}
+	iLen = 0;
+
 		FILE *fpHeatmap = NULL;
 		char acHeatmapTmp[MAX_FILENAME_BUFLEN] = {0};
 		snprintf(acHeatmapTmp, MAX_FILENAME_BUFLEN, HEATMAP_TMP_FILE, (int)ptConf->iStartTime);
@@ -928,16 +714,7 @@ SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)
 			if ((char*) sqlite3_column_text(stmt,0)) // Check db is null or not
 			{
 				fprintf(fpHeatmap, "%s", sqlite3_column_text(stmt,0)); // Move result to temp file first.
-				if (strlen(ptConf->acSample))
-				{
-					fprintf(fp, "%s", sqlite3_column_text(stmt,0));
-				}
 			}
-		}
-
-		if (strlen(ptConf->acSample))
-		{
-			fclose(fp);
 		}
 		fclose(fpHeatmap);
 
@@ -965,7 +742,6 @@ SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)
 			printf("Unable to delete the heatmap tmp file\n");
 			return S_FAIL;
 		}
-	}
 
 	free(pcBuf);
 	return status;
