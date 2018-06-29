@@ -11,7 +11,7 @@
 #include    "vcareport.h"
 #include	"ts2datetime.h"
 
-int VCAReport_GetFromConfiger(char* pszParam, char *pszOutBuffer)
+int VCAReport_GetFromConfiger(char *pszParam, char *pszOutBuffer)
 {
 	struct	sockaddr_un	sunx;
 	int iFD;
@@ -84,6 +84,127 @@ int VCAReport_GetFromConfiger(char* pszParam, char *pszOutBuffer)
 	return S_OK;
 }
 
+char *split(char *str, char *delim)
+{
+	char *p = strstr(str, delim);
+	if (p == NULL) return NULL;
+	*p = '\0';
+	return p + strlen(delim);
+}
+
+SCODE ParseJson(char *pszConfig, char *pszParam, char *pszVal)
+{
+	char *pcTmp = NULL, *pcResult = NULL;
+	char pcParamFormat[20] = {0};
+	sprintf(pcParamFormat, "\"%s\" : \"", pszParam);
+	pcTmp = split(pszConfig, pcParamFormat);
+	if (pcTmp)
+	{
+		char *pcdelim = strstr(pcTmp, "\"");
+		strncpy(pszVal, pcTmp, pcdelim - pcTmp);
+	}
+	return S_OK;
+}
+
+SCODE VCAReport_GetVadpPathByName(char *pszName, char *pszPath)
+{
+	char szParam[MAX_FORMAT_BUFLEN] = {0};
+	char szVal[MAX_INFO_LENGTH] = {0};
+	int i;
+	for (i = 0; i < MAX_VADP_NUM; ++i)
+	{
+		snprintf(szParam, sizeof(szParam), "vadp_module_i%d_name", i);
+		if ((VCAReport_GetFromConfiger(szParam, szVal)) != S_OK)
+		{
+			printf("Get device center id failed\n");
+			return S_FAIL;
+		}
+		if (!strcmp(szVal, pszName))
+		{
+			memset(szParam, 0, sizeof(szParam));
+			memset(szVal, 0, sizeof(szVal));
+			snprintf(szParam, sizeof(szParam), "vadp_module_i%d_path", i);
+
+			if ((VCAReport_GetFromConfiger(szParam, szVal)) != S_OK)
+			{
+				printf ("Get the path of device center failed.\n");
+				return S_FAIL;
+			}
+			memcpy(pszPath, szVal, strlen(szVal));
+			return S_OK;
+		}
+	}
+	return S_FAIL;
+}
+
+SCODE VCAReport_GetDeviceCenterParm(char *pszVadpPath, char *pszParam, char *pszResult)
+{
+	SCODE sRet = S_FAIL;
+	char szMvaasdConfig[MAX_FORMAT_BUFLEN] = {0};
+	FILE *pfMvaasdConfig = NULL;
+	char *pcConfigBuff = NULL;
+	struct stat filestat;
+	int i;
+
+	snprintf(szMvaasdConfig, sizeof(szMvaasdConfig), "%s/conf.d/mvaasd.json", pszVadpPath);
+	if (access(szMvaasdConfig, F_OK) != -1)
+	{
+		pfMvaasdConfig = fopen(szMvaasdConfig, "r");
+		if (pfMvaasdConfig == NULL)
+		{
+			printf("fopen mvaasd config failed\n");
+			return S_FAIL;
+		}
+		else
+		{
+			if ((stat(szMvaasdConfig, &filestat)) != 0)
+			{
+				printf("stat mvaasd config failed\n");
+				fclose(pfMvaasdConfig);
+				return S_FAIL;
+			}
+			else
+			{
+				pcConfigBuff = malloc(filestat.st_size);
+				size_t ReadLen = 0;
+				if (pcConfigBuff == NULL)
+				{
+					printf("Malloc failed\n");
+					fclose(pfMvaasdConfig);
+					return S_FAIL;
+				}
+				else
+				{
+					if ((ReadLen = fread(pcConfigBuff, filestat.st_size, 1, pfMvaasdConfig)) == 0)
+					{
+						printf("Fread mvaasd config failed\n");
+						fclose(pfMvaasdConfig);
+						free(pcConfigBuff);
+						return S_FAIL;
+					}
+
+					if ((ParseJson(pcConfigBuff, pszParam, pszResult)) != S_OK)
+					{
+						printf("Parse failed\n");
+						fclose(pfMvaasdConfig);
+						free(pcConfigBuff);
+						return S_FAIL;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		printf("Access mvaasd config failed\n");
+		return S_FAIL;
+	}
+
+	fclose(pfMvaasdConfig);
+	free(pcConfigBuff);
+	return S_OK;
+}
+
 UInt64 VCAReport_GetUTCTime(UInt64 iTimestamp, int iTimeZone, int iDST)
 {
 	return iTimestamp - iTimeZone - iDST * 3600;
@@ -117,74 +238,106 @@ void VCAReport_PrintReportEndTag(TReportConf *ptConf)
 SCODE VCAReport_GetSystemInfo(TReportConf *ptConf)
 {
 	// Get system info
-	char acBuf[MAX_INFO_LENGTH] = {0};
+	char acMacTmp[MAX_INFO_LENGTH] = {0};
 	char szMac[MAX_INFO_LENGTH] = {0}, szIP[MAX_INFO_LENGTH] = {0}, szDeviceID[MAX_INFO_LENGTH] = {0},
 		 szGroupID[MAX_INFO_LENGTH] = {0}, szModuleName[MAX_INFO_LENGTH] = {0}, szTimeZone[MAX_INFO_LENGTH] = {0},
 		 szDST[MAX_INFO_LENGTH] = {0}, szCurr[MAX_INFO_LENGTH] = {0};
+	char szVadpPath[MAX_INFO_LENGTH] = {0};
 	int iLen = 0;
 
-	VCAReport_GetFromConfiger("system_info_serialnumber", szMac);
+	VCAReport_GetFromConfiger("system_info_serialnumber", acMacTmp);
 	int i ,j;
-	for (i = 0, j = 0; i < strlen(szMac); ++i, ++j)
+	for (i = 0, j = 0; i < strlen(acMacTmp); ++i, ++j)
 	{
 		if (i != 0 && i%2 == 0)
 		{
-			acBuf[j] = ':';
-			acBuf[j+1] = szMac[i];
+			szMac[j] = ':';
+			szMac[j+1] = acMacTmp[i];
 			j = j+1;
 		}
 		else
 		{
-			acBuf[j] = szMac[i];
+			szMac[j] = acMacTmp[i];
 		}
 	}
-	strncpy(szMac, acBuf, sizeof(szMac));
 
 	VCAReport_GetFromConfiger("network_ipaddress", szIP);
-	VCAReport_GetFromConfiger("system_location_deviceid", szDeviceID);
-	VCAReport_GetFromConfiger("system_location_groupid", szGroupID);
 	VCAReport_GetFromConfiger("system_info_modelname", szModuleName);
 	VCAReport_GetFromConfiger("system_timezoneindex", szTimeZone);
 	VCAReport_GetFromConfiger("system_daylight_dstactualmode", szDST);
 
-	int iTimeZone = atoi(szTimeZone);
-	iTimeZone -= iTimeZone%10;
-	ptConf->iTzOffset = ptConf->bLocal ? iTimeZone * 90 : 0;
-	iTimeZone /= 40;
-	iTimeZone > 0 ? sprintf(szTimeZone, "+%d", iTimeZone) : sprintf(szTimeZone, "%d", iTimeZone);
-
 	!strcmp(szDST, "3") ? strcpy(szDST, "1") : strcpy(szDST, "0");
 	ptConf->iDST = atoi(szDST);
+
+	int iTimeZone = atoi(szTimeZone);
+	iTimeZone -= iTimeZone%10;
 
 	struct timeval tv;
 	TTimeInfo tTimeInfo;
 	gettimeofday(&tv, NULL);  //Get current time
-	UInt64 ullUtcTime = VCAReport_GetUTCTime(tv.tv_sec, ptConf->iTzOffset, ptConf->iDST);
+	UInt64 ullUtcTime = VCAReport_GetUTCTime(tv.tv_sec, iTimeZone*90, ptConf->iDST);
+
+	ptConf->iTzOffset = ptConf->bLocal ? iTimeZone * 90 : 0;
+	iTimeZone /= 40;
+	iTimeZone > 0 ? sprintf(szTimeZone, "+%d", iTimeZone) : sprintf(szTimeZone, "%d", iTimeZone);
+
 	ts2datetime(ullUtcTime, 0, 0, &tTimeInfo);
 	snprintf(szCurr, MAX_INFO_LENGTH, DATETIME_FORMAT, tTimeInfo.iYear, tTimeInfo.iMonth, tTimeInfo.iDay,
 			tTimeInfo.iHr, tTimeInfo.iMin, tTimeInfo.iSec);
 
-#ifdef _DEBUGSYSINFO_
-	printf("===================================================================================================\n");
-	printf("Mac: %s\nIP: %s\nDeviceID: %s\nGroupID: %s\nModule Name: %s\nTime Zone: %s\nDST: %s\nCurrent Time: %s\n",
-			szMac, szIP, szDeviceID, szGroupID, szModuleName, szTimeZone, szDST, szCurr);
-	printf("===================================================================================================\n");
-#endif
+	if ((VCAReport_GetVadpPathByName("Device Center", szVadpPath)) == S_OK)
+	{
+		if ((VCAReport_GetDeviceCenterParm(szVadpPath, "deviceid", szDeviceID)) != S_OK)
+		{
+			printf("Get device center param (device id) failed\n");
+			return S_FAIL;
+		}
+		if (strlen(szDeviceID) == 0)
+		{
+			char szHostName[MAX_INFO_LENGTH] = {0};
+			VCAReport_GetFromConfiger("system_hostname", szHostName);
+			for (i = 0; i < strlen(acMacTmp); ++i)
+			{
+				if (acMacTmp[i] >= 65 && acMacTmp[i] <= 90)
+				{
+					acMacTmp[i] += 32;
+				}
+			}
+			snprintf(szDeviceID, MAX_INFO_LENGTH, Defaut_DeviceID_FORMAT, szHostName, acMacTmp);
+		}
+		if ((VCAReport_GetDeviceCenterParm(szVadpPath, "groupid", szGroupID)) != S_OK)
+		{
+			printf("Get device center param (group id) failed\n");
+			return S_FAIL;
+		}
+	}
 
 	switch (ptConf->eFmt)
 	{
 		case eXML:
-			if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_XML, szCurr, szGroupID,
-								 szDeviceID, szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
+			if (strlen(szVadpPath) == 0)
 			{
-				printf("The size of system info exceeds buffer\n");
-				return S_FAIL;
+				if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_XML_LIGHT, szCurr,
+								szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
+				{
+					printf("The size of system info exceeds buffer\n");
+					return S_FAIL;
+				}
+			}
+			else
+			{
+				if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_XML, szCurr, szGroupID,
+								szDeviceID, szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
+				{
+					printf("The size of system info exceeds buffer\n");
+					return S_FAIL;
+				}
 			}
 			break;
 		case eJSON:
-			if (!strcmp(ptConf->acVCAType, "heatmap"))
+			if (!strcmp(ptConf->acVCAType, "heatmap") || strlen(szVadpPath) == 0)
 			{
-				if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_HEATMAP_JSON, szCurr,
+				if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_JSON_LIGHT, szCurr,
 									 szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
 				{
 					printf("The size of system info exceeds buffer\n");
@@ -202,11 +355,23 @@ SCODE VCAReport_GetSystemInfo(TReportConf *ptConf)
 			}
 			break;
 		case eCSV:
-			if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_CSV, szCurr, szGroupID,
-								 szDeviceID, szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
+			if (strlen(szVadpPath) == 0)
 			{
-				printf("The size of system info exceeds buffer\n");
-				return S_FAIL;
+				if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_CSV_LIGHT, szCurr,
+								szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
+				{
+					printf("The size of system info exceeds buffer\n");
+					return S_FAIL;
+				}
+			}
+			else
+			{
+				if ((iLen = snprintf(ptConf->acSystemInfo, MAX_SYSINFO_LENGTH, EVENT_SOURCE_CSV, szCurr, szGroupID,
+								szDeviceID, szModuleName, szMac, szIP, szTimeZone, szDST)) >= MAX_SYSINFO_LENGTH)
+				{
+					printf("The size of system info exceeds buffer\n");
+					return S_FAIL;
+				}
 			}
 			break;
 		default:
@@ -259,6 +424,33 @@ SCODE VCAReport_MakeTempDir()
 		}
 	}
 	return S_OK;
+}
+
+SCODE StepSql(sqlite3_stmt *stmt)
+{
+	int rc, iRetry = 0;
+	do
+	{
+		rc = sqlite3_step(stmt);
+		if (rc == SQLITE_LOCKED || rc == SQLITE_BUSY)
+		{
+			usleep(10000);
+			++iRetry;
+		}
+	}while (iRetry < 3 && (rc == SQLITE_BUSY || rc == SQLITE_LOCKED));
+
+	if (iRetry >= 3)
+	{
+		printf("ERROR: Retry still lock\n");
+	}
+
+	return rc;
+}
+
+int DBLockCallback(void *ptr, int iCount)
+{
+	usleep(500000);
+	return 1;
 }
 
 SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
@@ -318,6 +510,8 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 		return S_FAIL;
 	}
 
+	sqlite3_busy_handler(db, DBLockCallback, (void *)db);
+
 	rc = sqlite3_exec(db,SQL_PRAGMA_TEMP_DIR, 0, 0, 0);
 	if (rc != SQLITE_OK)
 	{
@@ -368,7 +562,7 @@ SCODE VCAReport_GetCountingData(TReportConf *ptConf, char **ppcDateTime)
 	iLen = 0, iDataLen = 0;
 	int iRemain = MAX_BUFFER_SIZE;
 
-		while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+		while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
 		{
 			iIn = sqlite3_column_int(stmt, 1);
 			iOut = sqlite3_column_int(stmt, 2);
@@ -530,6 +724,8 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 			return S_FAIL;
 		}
 
+		sqlite3_busy_handler(db, DBLockCallback, (void *)db);
+
 		rc = sqlite3_exec(db,SQL_PRAGMA_TEMP_DIR, 0, 0, 0);
 		if (rc != SQLITE_OK)
 		{
@@ -571,7 +767,7 @@ SCODE VCAReport_GetZoneData(TReportConf *ptConf, char **ppcDateTime)
 		iLen = 0, iDataLen = 0;
 		int iRemain = MAX_BUFFER_SIZE;
 
-			while((rc = sqlite3_step(stmt)) == SQLITE_ROW)
+			while ((rc = sqlite3_step(stmt)) == SQLITE_ROW)
 			{
 				strncpy(acZoneName, sqlite3_column_text(stmt,0), sizeof(acZoneName));
 				iInward = sqlite3_column_int(stmt, 1);
@@ -663,6 +859,8 @@ SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)
 		return S_FAIL;
 	}
 
+	sqlite3_busy_handler(db, DBLockCallback, (void *)db);
+
 	rc = sqlite3_exec(db,SQL_PRAGMA_TEMP_DIR, 0, 0, 0);
 	if (rc != SQLITE_OK)
 	{
@@ -709,7 +907,8 @@ SCODE VCAReport_GetHeatmapData(TReportConf *ptConf)
 			printf("Open heatmap tmp file for writing error\n");
 			return S_FAIL;
 		}
-		while((rc = sqlite3_step(stmt)) == SQLITE_ROW) //heatmap only executes one time since db contains entire json.
+
+		while (sqlite3_step(stmt) == SQLITE_ROW) //heatmap only executes one time since db contains entire json.
 		{
 			if ((char*) sqlite3_column_text(stmt,0)) // Check db is null or not
 			{

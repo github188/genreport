@@ -43,7 +43,7 @@ void getDateTime(TTimeInfo *ptCurrTime, int iTzOffset, char * pcBuf, unsigned in
 	}
 }
 
-void VCAReport_GenISO8601DateTimeArr(const UInt64 iStart,const UInt64 iEnd, const Int64 iAggr, int iTZ, const int iDst, BOOL bLocal, char *** pppcBuf, unsigned int * piSize )
+void VCAReport_GenISO8601DateTimeArr(const UInt64 iStart,const UInt64 iEnd, const Int64 iAggr, int iTZ, int iDst, BOOL bLocal, char *** pppcBuf, unsigned int * piSize )
 {
 	UInt64 iTime = 1;
 	int iAllocatedSize, index, SIZE_CHAR = sizeof(char);
@@ -58,7 +58,10 @@ void VCAReport_GenISO8601DateTimeArr(const UInt64 iStart,const UInt64 iEnd, cons
 	memset(ppcBuf[0], 0, DATETIME_MAX_LEN * (*piSize));
 
 	if (!bLocal)
+	{
 		iTZ = 0;
+		iDst = 0;
+	}
 
 	for (;iTime < (*piSize) ; ++iTime)
 	{

@@ -21,9 +21,9 @@
 #include "typedef.h"
 #include "type.h"
 #define VCAREPORT_MODULE_NAME		"vcareport"
-#define	VCAREPORT_VERSION			"1.1.3.0"
-#define VCAREPORT_MODIFY_DATETIME	"Last modified at 2017/12/12 18:00:00"
-#define VCA_REPORT_VERSION			MAKEFOURCC(1, 1, 3, 0)
+#define	VCAREPORT_VERSION			"1.1.3.4"
+#define VCAREPORT_MODIFY_DATETIME	"Last modified at 2018/06/11 18:00:00"
+#define VCA_REPORT_VERSION			MAKEFOURCC(1, 1, 3, 4)
 
 #define MAX_BUFFER_SIZE 			102400
 #define MAX_SCRIPT_LENGTH			1024
@@ -32,6 +32,8 @@
 #define MAX_CMD_LENGTH 				512
 #define MAX_INFO_LENGTH 			50
 #define MAX_SYSINFO_LENGTH 			512
+#define MAX_VADP_NUM                10
+#define Defaut_DeviceID_FORMAT      "%s (%s)"
 
 #define DEFAULT_COUNTING_DB_PATH		"/mnt/flash2/vcadb/counting.db"
 #define DEFAULT_ZONE_DB_PATH			"/mnt/flash2/vcadb/zone.db"
@@ -75,6 +77,8 @@
 
 #define EVENT_SOURCE_XML            "<Source><UtcTime>%s</UtcTime><GroupID>%s</GroupID><DeviceID>%s</DeviceID><ModelName>%s</ModelName><MacAddress>%s</MacAddress><IPAddress>%s</IPAddress><TimeZone>%s</TimeZone><DST>%s</DST></Source>"
 
+#define EVENT_SOURCE_XML_LIGHT      "<Source><UtcTime>%s</UtcTime><ModelName>%s</ModelName><MacAddress>%s</MacAddress><IPAddress>%s</IPAddress><TimeZone>%s</TimeZone><DST>%s</DST></Source>"
+
 //#define EVENT_COUNT_HEAD_XML      "<Data RuleType=\"Counting\">%s</Data>"
 #define EVENT_COUNT_HEAD_XML_STAG   "<Data RuleType=\"Counting\">"
 #define EVENT_COUNT_HEAD_XML_ETAG   "</Data>"
@@ -103,10 +107,11 @@
 #define EVENT_ZONE_HEAD_JSON_ETAG   "]}"
 #define EVENT_ZONE_DATA_JSON        "{\"RuleName\":\"%s\",\"InwardCount\":%d,\"SumOutwardDuration\":%d,\"TotalCount\":%d,\"AvgDuration\":%.2f,\"AvgCount\":%.2f,\"StartTime\":\"%s\",\"EndTime\":\"%s\"},"
 
-#define EVENT_SOURCE_HEATMAP_JSON 	"\"ReportTime\":\"%s\",\"ModelName\":\"%s\",\"MacAddress\":\"%s\",\"IPAddress\":\"%s\",\"TimeZone\":\"%s\",\"DST\":\"%s\""
+#define EVENT_SOURCE_JSON_LIGHT		"\"ReportTime\":\"%s\",\"ModelName\":\"%s\",\"MacAddress\":\"%s\",\"IPAddress\":\"%s\",\"TimeZone\":\"%s\",\"DST\":\"%s\""
 
 // CSV
 #define EVENT_SOURCE_CSV 			"ReportTime,GroupID,DeviceID,ModelName,MacAddress,IPAddress,TimeZone,DST\n%s,%s,%s,%s,%s,%s,%s,%s\n"
+#define EVENT_SOURCE_CSV_LIGHT 		"ReportTime,ModelName,MacAddress,IPAddress,TimeZone,DST\n%s,%s,%s,%s,%s,%s\n"
 #define EVENT_COUNT_HEAD_CSV		"RuleType,RuleName,In,Out,StartTime,EndTime\n"
 #define REPORT_CSV_FORMAT			"Counting,%s,%d,%d,%s,%s\n"
 #define EVENT_ZONE_HEAD_CSV         "RuleType,RuleName,InwardCount,SumOutwardDuration,TotalCount,AvgDuration,AvgCount,StartTime,EndTime\n"
